@@ -1,16 +1,21 @@
 from bs4 import BeautifulSoup
+import urllib2
+import re
 
 def parse_html(html):
     soup = BeautifulSoup(html, 'html.parser')
     return soup
 
-def extract_links(soup_object):
-    links = [for link in soup_object.find_all('a')]
+def extract_links(soup):
+    links = []
+    for link in soup.findAll('a', attrs={'href': re.compile("^http://")}):
+        links.append(link.get('href'))
     return links
 
 def main():
-    soup_object = parse_html()
-    extract_links(soup_object)
+    links = []
+    soup = parse_html()
+    links = extract_links(soup)
 
 if __name__ == '__main__':
     main()
