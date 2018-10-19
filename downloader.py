@@ -2,6 +2,14 @@ import requests
 from random import choice
 
 def random_useragent():
+    """ฟังก์ชั่นสำหรับ random user-agent ขึ้นมาใช้
+
+    โดยจะอ่าน user-agent ขึ้นมาจากไฟล์ user-agents.txt แล้วจะเลือก random ขึ้นมา 1 ตัว
+
+    Returns:
+        dict: มี 5 key ได้แก่ User-Agent, Accept, Accept-Encoding, Connection, DNT
+
+    """
     UAS = []
     HEADERS = {
                 'User-Agent': 'Mozilla/5.0',
@@ -17,6 +25,14 @@ def random_useragent():
     return HEADERS
 
 def random_proxy():
+    """ฟังก์ชั่นสำหรับ random proxy ขึ้นมาใช้
+
+    โดยจะอ่าน proxy ขึ้นมาจากไฟล์ proxies.txt แล้วจะเลือก random ขึ้นมา 1 ตัว
+
+    Returns:
+        dict: key คือ protocol และ value คือ ip address:port
+
+    """
     proxy_list = []
     with open('./proxies.txt') as f:
         proxys = f.read().split('\n')
@@ -31,6 +47,18 @@ def random_proxy():
     return {selected_proxy.split('://')[0]: selected_proxy.split('://')[1]}
 
 def get_page(url) :
+    """ดาวน์โหลดเพจเว็บเพจที่ระบุ
+
+    ดาวน์โหลดเว็บเพจโดยใช้ proxy และ user-agent จากการ random
+
+    Args:
+        url (string): url ของเว็บเพจที่ต้องการดาวน์โหลดซึ่งอยู่ในรูปที่ normalize แล้ว (เป็น absolute url และมี protocol) 
+            เช่น http://www.example.com/test
+
+    Returns:
+        string: html ของเว็บเพจที่ดาวน์โหลดมา
+
+    """
     try :
         r = requests.get(url, headers=random_useragent(), proxies=random_proxy(), timeout=3)
         html = r.text
