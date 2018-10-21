@@ -1,11 +1,11 @@
 import re
 from urllib.parse import urlparse, urljoin
-from downloader import Downloader
+import downloader
 
 class RobotParser :
 	def __init__(self, caching=True, use_proxies=True):
 		self.caching = caching
-		self.downloader = Downloader(use_proxies=use_proxies)
+		self.downloader = downloader.Downloader(use_proxies=use_proxies)
 		if caching:
 			self.cache = {}
 
@@ -14,7 +14,15 @@ class RobotParser :
 
 	def read_robots(self, root_url):
 		robots_url = urljoin(root_url, 'robots.txt')
-		robots = self.downloader.get_page(robots_url)
+		while True:
+			try:
+				robots = self.downloader.get_page(robots_url)
+				break
+			except downloader.PageNotFound:
+				robots = None
+				break
+			except downloader.NetworkError:
+				pass
 		return robots
 
 	def parse_robots(self, robots):
@@ -28,10 +36,12 @@ class RobotParser :
 		else:
 			root_url = self.get_root_url(parsed_url)
 			robots = self.read_robots(root_url)
+			parsed_robots = None
 			if robots is not None:
 				parsed_robots = self.parse_robots(robots)
 				# check regex
 			if self.caching:
 				self.cache[parsed_url.netloc] = parsed_robots
+			
 		return result
 				
