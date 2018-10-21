@@ -68,16 +68,23 @@ class Downloader:
                 r = requests.get(url, headers=self.random_useragent(), proxies=self.random_proxy(), timeout=3)
             else:
                 r = requests.get(url, timeout=3)
-            html = r.text
             if r.status_code == 404:
-                print(f'404: {url}')
-                html = None
+                raise PageNotFound(f'{url} does not exist.')
+            html = r.text
             return html
         except requests.exceptions.ProxyError:
-            print('proxy error')
+            raise NetworkError('proxy error.')
         except requests.exceptions.ConnectTimeout:
-            print('connection timeout')
-        except Exception as e:
-            print(f'getting page error: {url}')
-            print(e)
-            raise
+            raise NetworkError('connection timeout.')
+
+class Error(Exception):
+    """Base class for exceptions in this module."""
+    pass
+
+class PageNotFound(Error):
+    def __init__(self, message):
+        self.message = message
+
+class NetworkError(Error):
+    def __init__(self, message):
+        self.message = message
