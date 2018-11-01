@@ -11,7 +11,12 @@ class RobotParser :
 			self.cache = {}
 
 	def get_root_url(self, parsed_url):
-		return f'{parsed_url.scheme}://{parsed_url.netloc}'
+		result = ''
+		if parsed_url.netloc != '' and parsed_url.scheme != '':
+			result = f'{parsed_url.scheme}://{parsed_url.netloc}'
+		elif parsed_url.netloc != '':
+			result = parsed_url.netloc
+		return result
 
 	def read_robots(self, root_url):
 		robots_url = urljoin(root_url, 'robots.txt')
