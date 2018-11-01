@@ -48,20 +48,22 @@ class RobotParser :
 	def is_allowed(self, url):
 		parsed_url = urlparse(url)
 		result = True
+		parsed_robots = None
+
 		if self.caching and parsed_url.netloc in self.cache.keys():
-			pass
+			parsed_robots = self.cache[parsed_url.netloc]
 		else:
 			root_url = self.get_root_url(parsed_url)
 			robots = self.read_robots(root_url)
-			parsed_robots = None
 			if robots is not None:
 				parsed_robots = self.parse_robots(root_url, robots)
-				for disallow in parsed_robots['disalloweds']:
-					if disallow.match(url):
-						result = False
-						break
+
+		if parsed_robots is not None and len(parsed_robots['disalloweds']) > 0:
+			for disallow in parsed_robots['disalloweds']:
+				if disallow.match(url):
+					result = False
+					break
 			if self.caching:
 				self.cache[parsed_url.netloc] = parsed_robots
 			
 		return result
-				
