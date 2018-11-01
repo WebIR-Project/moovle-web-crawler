@@ -26,8 +26,24 @@ class RobotParser :
 				pass
 		return robots
 
-	def parse_robots(self, robots):
-		pass
+	def parse_robots(self, root_url, robots):
+		result = {'disallows': [], 'sitemaps': []}
+		lines = robots.split('\n')
+		line_c = 0
+		while line_c < len(lines):
+			line = lines[line_c]
+			if re.match('User-agent:', line):
+				line_c += 1
+				while (re.match('Allow:', line) or re.match('Disallow:', line)) and line_c < len(lines):
+					line = line[line_c]
+					if re.match('Disallow:', line):
+						disallow = urljoin(root_url, line.replace('Disallow:', '').strip())
+						disallow = disallow.replace('*', '.*')
+						result['disallows'].append(re.compile(disallow))
+					line_c += 1
+			elif re.match('Sitemap:', line):
+				result['disallows'].append(line.replace('Sitemap:', '').strip())
+		return result
 		
 	def is_allowed(self, url):
 		parsed_url = urlparse(url)
@@ -39,7 +55,7 @@ class RobotParser :
 			robots = self.read_robots(root_url)
 			parsed_robots = None
 			if robots is not None:
-				parsed_robots = self.parse_robots(robots)
+				parsed_robots = self.parse_robots(root_url, robots)
 				# check regex
 			if self.caching:
 				self.cache[parsed_url.netloc] = parsed_robots
