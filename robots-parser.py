@@ -3,7 +3,8 @@ from urllib.parse import urlparse, urljoin
 import downloader
 
 class RobotParser :
-	def __init__(self, caching=True, use_proxies=True):
+	def __init__(self, user_agent=None, caching=True, use_proxies=True):
+		self.user_agent = user_agent
 		self.caching = caching
 		self.downloader = downloader.Downloader(use_proxies=use_proxies)
 		if caching:
