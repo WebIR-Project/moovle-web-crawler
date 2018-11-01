@@ -27,7 +27,7 @@ class RobotParser :
 		return robots
 
 	def parse_robots(self, root_url, robots):
-		result = {'disallows': [], 'sitemaps': []}
+		result = {'disalloweds': [], 'sitemaps': []}
 		lines = robots.split('\n')
 		line_c = 0
 		while line_c < len(lines):
@@ -39,10 +39,10 @@ class RobotParser :
 					if re.match('Disallow:', line):
 						disallow = urljoin(root_url, line.replace('Disallow:', '').strip())
 						disallow = disallow.replace('*', '.*')
-						result['disallows'].append(re.compile(disallow))
+						result['disalloweds'].append(re.compile(disallow))
 					line_c += 1
 			elif re.match('Sitemap:', line):
-				result['disallows'].append(line.replace('Sitemap:', '').strip())
+				result['disalloweds'].append(line.replace('Sitemap:', '').strip())
 		return result
 		
 	def is_allowed(self, url):
@@ -56,7 +56,10 @@ class RobotParser :
 			parsed_robots = None
 			if robots is not None:
 				parsed_robots = self.parse_robots(root_url, robots)
-				# check regex
+				for disallow in parsed_robots['disalloweds']:
+					if disallow.match(url):
+						result = False
+						break
 			if self.caching:
 				self.cache[parsed_url.netloc] = parsed_robots
 			
