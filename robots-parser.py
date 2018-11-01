@@ -15,12 +15,12 @@ class RobotParser :
 
 	def read_robots(self, root_url):
 		robots_url = urljoin(root_url, 'robots.txt')
+		robots = None
 		while True:
 			try:
 				robots = self.downloader.get_page(robots_url)
 				break
 			except downloader.PageNotFound:
-				robots = None
 				break
 			except downloader.NetworkError:
 				pass
@@ -63,7 +63,4 @@ class RobotParser :
 				if disallow.match(url):
 					result = False
 					break
-			if self.caching:
-				self.cache[parsed_url.netloc] = parsed_robots
-			
 		return result
