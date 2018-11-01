@@ -71,3 +71,15 @@ class RobotParser :
 					result = False
 					break
 		return result
+
+	def get_sitemap(self, root_url):
+		parsed_url = urlparse(root_url)
+		parsed_robots = None
+		if self.caching and parsed_url.netloc in self.cache.keys():
+			parsed_robots = self.cache[parsed_url.netloc]
+		else:
+			parsed_robots = self.read_parse_robots(root_url)
+		if parsed_robots is not None:
+			return parsed_robots['sitemaps']
+		else:
+			return None
