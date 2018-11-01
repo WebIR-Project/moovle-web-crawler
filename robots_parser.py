@@ -46,7 +46,10 @@ class RobotParser :
 						if re.match('Disallow:', line):
 							disallow = urljoin(root_url, line.replace('Disallow:', '').strip())
 							disallow = disallow.replace('*', '.*')
-							result['disalloweds'].append(re.compile(disallow))
+							if disallow[-1] == '/':
+								result['disalloweds'].append(re.compile(disallow + '.*'))
+							else:
+								result['disalloweds'].append(re.compile(disallow + '$'))
 						line_c += 1
 					line_c -= 1
 			elif re.match('Sitemap:', line):

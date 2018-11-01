@@ -18,24 +18,48 @@ class TestParsedRobot(unittest.TestCase):
     def setUp(self):
         self.robots_parser = RobotParser(user_agent='unittest')
 
-    def test_disallow_count(self):
+    def test_disallowed_count(self):
         root_url = 'http://www.test.com'
-        robots = 'User-agent: *\nDisallow: /test\nDisallow: /*/secret\nDisallow: /no/*'
+        robots = 'User-agent: *\nDisallow: /test/\nDisallow: /*/secret\nDisallow: /no/*'
         parsed_robots = self.robots_parser.parse_robots(root_url, robots)
         self.assertEqual(len(parsed_robots['disalloweds']), 3)
 
-        # label = [False, False, False, False, True]
-        # test_urls = ['http://www.test.com/test', 'http://www.test.com/doc/secret', 'http://www.test.com/no/data', 
-        #     'http://www.test.com/test/data', 'http://www.test.com/test2/data']
-        # alloweds = []
-        # for i in range(5):
-        #     alloweds.append(True)
-        # for disallow in disalloweds:
-        #     for i in range(len(test_urls)):
-        #         url = test_urls[i]
-        #         if disallow.match(url):
-        #             alloweds[i] = False
-        # self.assertRegex(test_urls[0], disalloweds[0])
+    def test_disallowed_directly(self):
+        root_url = 'http://www.test.com'
+        robots = 'User-agent: *\nDisallow: /test/\nDisallow: /*/secret\nDisallow: /no/*'
+        parsed_robots = self.robots_parser.parse_robots(root_url, robots)
+        test_url = 'http://www.test.com/test/'
+        self.assertRegex(test_url, parsed_robots['disalloweds'][0])
+
+    def test_disallowed_child(self):
+        root_url = 'http://www.test.com'
+        robots = 'User-agent: *\nDisallow: /test/\nDisallow: /*/secret\nDisallow: /no/*'
+        parsed_robots = self.robots_parser.parse_robots(root_url, robots)
+        test_url = 'http://www.test.com/test/data'
+        self.assertRegex(test_url, parsed_robots['disalloweds'][0])
+
+    def test_disallowed_regex_before(self):
+        root_url = 'http://www.test.com'
+        robots = 'User-agent: *\nDisallow: /test/\nDisallow: /*/secret\nDisallow: /no/*'
+        parsed_robots = self.robots_parser.parse_robots(root_url, robots)
+        test_url = 'http://www.test.com/doc/secret'
+        self.assertRegex(test_url, parsed_robots['disalloweds'][1])
+
+    def test_disallowed_regex_after(self):
+        root_url = 'http://www.test.com'
+        robots = 'User-agent: *\nDisallow: /test/\nDisallow: /*/secret\nDisallow: /no/*'
+        parsed_robots = self.robots_parser.parse_robots(root_url, robots)
+        test_url = 'http://www.test.com/no/data'
+        self.assertRegex(test_url, parsed_robots['disalloweds'][2])
+
+    def test_allowed(self):
+        root_url = 'http://www.test.com'
+        robots = 'User-agent: *\nDisallow: /test\nDisallow: /*/secret\nDisallow: /no/*'
+        parsed_robots = self.robots_parser.parse_robots(root_url, robots)
+        test_url = 'http://www.test.com/test2/data'
+        self.assertNotRegex(test_url, parsed_robots['disalloweds'][0])
+        self.assertNotRegex(test_url, parsed_robots['disalloweds'][1])
+        self.assertNotRegex(test_url, parsed_robots['disalloweds'][2])
 
 if __name__ == '__main__':
     unittest.main()
