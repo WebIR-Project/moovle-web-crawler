@@ -11,5 +11,9 @@ class TestGetRootUrl(unittest.TestCase):
         parsed_url = urlparse('http://www.testurl.com/mytest/1')
         self.assertEqual(self.robots_parser.get_root_url(parsed_url), 'http://www.testurl.com')
 
+    def test_no_scheme(self):
+        parsed_url = urlparse('www.testurl.com/mytest/1')
+        self.assertEqual(self.robots_parser.get_root_url(parsed_url), '')
+
 if __name__ == '__main__':
     unittest.main()
