@@ -36,16 +36,22 @@ class RobotParser :
 		while line_c < len(lines):
 			line = lines[line_c]
 			if re.match('User-agent:', line):
-				line_c += 1
-				while (re.match('Allow:', line) or re.match('Disallow:', line)) and line_c < len(lines):
-					line = line[line_c]
-					if re.match('Disallow:', line):
-						disallow = urljoin(root_url, line.replace('Disallow:', '').strip())
-						disallow = disallow.replace('*', '.*')
-						result['disalloweds'].append(re.compile(disallow))
+				user_agent = line.replace('User-agent:', '').strip().replace('*', '.*')
+				if re.match(user_agent, self.user_agent):
 					line_c += 1
+					while line_c < len(lines):
+						line = lines[line_c]
+						if not re.match('Allow:', line) and not re.match('Disallow:', line):
+							break
+						if re.match('Disallow:', line):
+							disallow = urljoin(root_url, line.replace('Disallow:', '').strip())
+							disallow = disallow.replace('*', '.*')
+							result['disalloweds'].append(re.compile(disallow))
+						line_c += 1
+					line_c -= 1
 			elif re.match('Sitemap:', line):
 				result['disalloweds'].append(line.replace('Sitemap:', '').strip())
+			line_c += 1
 		return result
 
 	def read_parse_robots(self, root_url):
