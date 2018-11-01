@@ -44,6 +44,15 @@ class RobotParser :
 			elif re.match('Sitemap:', line):
 				result['disalloweds'].append(line.replace('Sitemap:', '').strip())
 		return result
+
+	def read_parse_robots(self, root_url):
+		robots = self.read_robots(root_url)
+		parsed_robots = None
+		if robots is not None:
+			parsed_robots = self.parse_robots(root_url, robots)
+		if self.caching:
+				self.cache[urlparse(root_url).netloc] = parsed_robots
+		return parsed_robots
 		
 	def is_allowed(self, url):
 		parsed_url = urlparse(url)
@@ -54,9 +63,7 @@ class RobotParser :
 			parsed_robots = self.cache[parsed_url.netloc]
 		else:
 			root_url = self.get_root_url(parsed_url)
-			robots = self.read_robots(root_url)
-			if robots is not None:
-				parsed_robots = self.parse_robots(root_url, robots)
+			parsed_robots = self.read_parse_robots(root_url)
 
 		if parsed_robots is not None and len(parsed_robots['disalloweds']) > 0:
 			for disallow in parsed_robots['disalloweds']:
