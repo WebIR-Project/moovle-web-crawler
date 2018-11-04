@@ -1,5 +1,5 @@
-from bs4 import BeautifulSoup
 import re
+from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse, unquote
 from bs4 import BeautifulSoup
 
@@ -13,8 +13,15 @@ def extract_links(soup):
         links.append(link.get('href'))
     return links
     
-def normalize_url(hostname, link) :
-    return unquote(unquote(urljoin(hostname, link))).strip()
+def normalize_url(root_url, link) :
+    url = unquote(unquote(urljoin(root_url, link))).strip()
+    parsed_url = urlparse(url)
+    path = parsed_url.path
+    path = re.sub('index\\.(html?|php)$', '', path)
+    if re.search('/[^/.]+$', path):
+        path += '/'
+    url = f'{parsed_url.scheme}://{parsed_url.netloc}{path if path != "/" else ""}'
+    return url
 
 def is_html_page(url):
     parsed_url = urlparse(url)
