@@ -14,12 +14,7 @@ def extract_links(soup):
     return links
     
 def normalize_url(hostname, link) :
-    urls = []
-    if link is not None and len(link) > 0 :
-        full_link = unquote(unquote(urljoin(hostname, link))).strip()
-        if full_link not in urls :
-            urls.append(full_link)
-    return urls
+    return unquote(unquote(urljoin(hostname, link))).strip()
 
 def is_html_page(url):
     parsed_url = urlparse(url)
