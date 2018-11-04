@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import re
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, unquote
 from bs4 import BeautifulSoup
 
 def parse_html(html):
@@ -13,11 +13,10 @@ def extract_links(soup):
         links.append(link.get('href'))
     return links
     
-#รับ hostname และ links
-def normalize_url(hostname,links) :
+def normalize_url(hostname, link) :
     urls = []
-    if links != None and len(links) > 0 :
-        full_link = urllib.parse.unquote(urljoin(hostname,links)).strip()
+    if link is not None and len(link) > 0 :
+        full_link = unquote(unquote(urljoin(hostname, link))).strip()
         if full_link not in urls :
             urls.append(full_link)
     return urls
