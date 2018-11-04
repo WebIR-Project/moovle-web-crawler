@@ -1,6 +1,6 @@
 import analyzer, json
 from pymongo import MongoClient
-from threading import Thread, Lock
+import threading
 import downloader
 from robots_parser import RobotParser
 from scheduler import Scheduler
@@ -9,6 +9,7 @@ client = MongoClient()
 db = client.moovle
 sch = Scheduler()
 rp = RobotParser(user_agent='random')
+lock = threading.Lock()
 
 def read_config():
     f = open('config.json')
@@ -28,8 +29,12 @@ def save_page(url, parsed_html, html, links):
         'html': html
     })
 
+def t_print(thread_name, msg):
+    print(f'{thread_name}: {msg}')
+
 def worker():
     global db, sch, rp
+    t_name = threading.current_thread().getName()
     d = downloader.Downloader(use_proxies=True)
     while True:
         lock.acquire()
@@ -37,6 +42,8 @@ def worker():
             break
         url = sch.dequeue()
         lock.release()
+
+        t_print(t_name, f'Downloading {url}')
 
         html = None
         while True:
@@ -50,8 +57,13 @@ def worker():
         parsed_html = analyzer.parse_html(html)
         links = analyzer.extract_links(parsed_html)
 
+
         lock.acquire()
-        save_page(url, parsed_html, html, links)
+        if html is not None:
+            t_print(t_name, f'Saving {url}')
+            save_page(url, parsed_html, html, links)
+        else:
+            t_print(t_name, f'Cannot download {url}')
         for link in [link for link in links if analyzer.is_html_page(link) and rp.is_allowed(url)]:
             sch.enqueue(link)
         sch.visited(url)
@@ -59,8 +71,7 @@ def worker():
 
 config = read_config()
 threads = []
-lock = Lock()
 for i in range(config['n_thread']):
-    t = Thread(target=worker)
+    t = threading.Thread(name=i, target=worker)
     threads.append(t)
     t.start()
