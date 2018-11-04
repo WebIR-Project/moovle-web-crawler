@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
 import re
+from urllib.parse import urljoin, urlparse, unquote
+from bs4 import BeautifulSoup
 
 def parse_html(html):
     soup = BeautifulSoup(html, 'html.parser')
@@ -8,9 +9,12 @@ def parse_html(html):
 
 def extract_links(soup):
     links = []
-    for link in soup.find_all('a'):
+    for link in soup.findAll('a', attrs={'href': re.compile("^http://")}):
         links.append(link.get('href'))
     return links
+    
+def normalize_url(hostname, link) :
+    return unquote(unquote(urljoin(hostname, link))).strip()
 
 def is_html_page(url):
     parsed_url = urlparse(url)
