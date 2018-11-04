@@ -1,12 +1,6 @@
-<<<<<<< HEAD
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
-=======
-import urllib
->>>>>>> feature/normalize-url
 import re
-from urllib.parse import urljoin
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 
 def parse_html(html):
@@ -28,7 +22,6 @@ def normalize_url(hostname,links) :
             urls.append(full_link)
     return urls
 
-<<<<<<< HEAD
 def is_html_page(url):
     parsed_url = urlparse(url)
     result = True
@@ -41,14 +34,3 @@ def is_html_page(url):
             if len(splitted_last) > 1 and ext != 'html' and ext != 'htm' and ext != 'php':
                 result = False
     return result
-=======
-def main():
-    links = []
-    soup = parse_html()
-    links = extract_links(soup)
-    full_urls = normalize_url()
-
-if __name__ == '__main__':
-    main()
-
->>>>>>> feature/normalize-url
