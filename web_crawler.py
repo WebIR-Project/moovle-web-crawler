@@ -3,6 +3,7 @@ from pymongo import MongoClient
 import threading
 import downloader
 from robots_parser import RobotParser
+from urllib.parse import urlparse
 from scheduler import Scheduler
 
 client = MongoClient()
@@ -55,8 +56,9 @@ def worker():
             except downloader.NetworkError:
                 pass
         parsed_html = analyzer.parse_html(html)
-        links = analyzer.extract_links(parsed_html)
-
+        parsed_url = urlparse(url)
+        hostname = parsed_url.netloc
+        links = [analyzer.normalize_url(hostname, link) for link in analyzer.extract_links(parsed_html)]
 
         lock.acquire()
         if html is not None:
@@ -64,7 +66,7 @@ def worker():
             save_page(url, parsed_html, html, links)
         else:
             t_print(t_name, f'Cannot download {url}')
-        for link in [link for link in links if analyzer.is_html_page(link) and rp.is_allowed(url)]:
+        for link in [link for link in links if analyzer.is_html_page(link) and rp.is_allowed(link) and len(urlparse(link).path.split('/')) <= 20]:
             sch.enqueue(link)
         sch.visited(url)
         lock.release()
