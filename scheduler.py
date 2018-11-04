@@ -45,7 +45,7 @@ class Scheduler:
                     if len(url_result) >= 0:
                         url = url_result[0]
                         break
-        return url
+        return url['url']
 
     def visited(self, url):
         parsed_url = urlparse(url)
