@@ -1,3 +1,4 @@
 {
-  "DB": "moovle"
+  "DB": "moovle",
+  "n_thread": 10
 }
