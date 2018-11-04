@@ -17,7 +17,8 @@ class Scheduler:
     def enqueue(self, url):
         visited = True if self.db['html'].find({'url': url}).count() > 0 else False
         in_queue = True if self.db['queue'].find({'url': url}).count() > 0 else False
-        if not visited and not in_queue:
+        in_buffer = True if self.db['buffer'].find({'url': url}).count() > 0 else False
+        if not visited and not in_queue and not in_buffer:
             parsed_url = urlparse(url)
             host = parsed_url.netloc
             self.db.queue.insert({'url': url, 'host': host, 'timestamp': datetime.now()})
@@ -45,7 +46,19 @@ class Scheduler:
                     if len(url_result) >= 0:
                         url = url_result[0]
                         break
+        if url is not None:
+            self.db.queue.remove({'url': url['url']})
+            self.db.buffer.insert({'host': url['host'], 'url': url['url']})
         return url['url']
+
+    def debuffer(self, url):
+        self.db.buffer.remove({'url': url})
+
+    def clean_buffer(self):
+        urls = list(self.db.buffer.find())
+        if len(urls) > 0:
+            for url in urls:
+                self.db.queue.insert({'host': url['host'], 'url': url['url'], 'timestamp': 0})
 
     def visited(self, url):
         parsed_url = urlparse(url)

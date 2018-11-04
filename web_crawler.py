@@ -1,4 +1,4 @@
-import analyzer, json
+import analyzer, json, time
 from pymongo import MongoClient
 import threading
 import downloader
@@ -9,6 +9,7 @@ from scheduler import Scheduler
 client = MongoClient()
 db = client.moovle
 sch = Scheduler()
+sch.clean_buffer()
 rp = RobotParser(user_agent='random')
 lock = threading.Lock()
 
@@ -41,7 +42,7 @@ def worker():
     while True:
         lock.acquire()
         if sch.get_queue_length() == 0:
-            t_print(t_name, 'Nothing to do')
+            # t_print(t_name, 'Nothing to do')
             lock.release()
             continue
         url = sch.dequeue()
@@ -59,21 +60,26 @@ def worker():
                 except downloader.NetworkError:
                     t_print(t_name, f'Retrying download {url}')
                     pass
-            parsed_html = analyzer.parse_html(html)
-            parsed_url = urlparse(url)
-            hostname = parsed_url.netloc
-            links = [analyzer.normalize_url(hostname, link) for link in analyzer.extract_links(parsed_html)]
-            lock.acquire()
             if html is not None:
+                t_print(t_name, f'Downloaded {url}')
+                parsed_html = analyzer.parse_html(html)
+                parsed_url = urlparse(url)
+                hostname = parsed_url.netloc
+                links = [analyzer.normalize_url(hostname, link) for link in analyzer.extract_links(parsed_html)]
+                lock.acquire()
                 t_print(t_name, f'Saving {url}')
                 save_page(url, parsed_html, html, links)
+                t_print(t_name, f'Saved {url}')
+                for link in [link for link in links if analyzer.is_html_page(link) and rp.is_allowed(link) and len(urlparse(link).path.split('/')) <= 20]:
+                    sch.enqueue(link)
             else:
                 t_print(t_name, f'Cannot download {url}')
-            for link in [link for link in links if analyzer.is_html_page(link) and rp.is_allowed(link) and len(urlparse(link).path.split('/')) <= 20]:
-                sch.enqueue(link)
+            sch.debuffer(url)
             sch.visited(url)
             lock.release()
         except Exception:
+            lock.release()
+            sch.debuffer(url)
             sch.enqueue(url)            
 
     t_print(t_name, 'Done')
@@ -94,3 +100,4 @@ while True:
             break
     if all_terminated:
         break
+    time.sleep(1)
