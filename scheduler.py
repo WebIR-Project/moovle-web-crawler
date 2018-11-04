@@ -30,10 +30,13 @@ class Scheduler:
             return urls[0]
         else:
             return None
+
+    def get_queue_length(self):
+        return self.db.queue.count()
         
     def dequeue(self):
         url = None
-        if self.db.queue.count() > 0:
+        if self.get_queue_length() > 0:
             url = self.get_new_host_url()
             host_counts = list(self.db.host_count.aggregate([{'$sort': {'count': 1}}]))
             if url is None:
