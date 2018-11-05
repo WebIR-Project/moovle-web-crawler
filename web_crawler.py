@@ -1,4 +1,4 @@
-import analyzer, json, time, sys
+import analyzer, json, time, sys, re
 from pymongo import MongoClient
 import threading
 import downloader
@@ -6,6 +6,7 @@ from robots_parser import RobotParser
 from urllib.parse import urlparse
 from scheduler import Scheduler
 
+url_patterns = read_url_patterns()
 client = MongoClient()
 db = client.moovle
 sch = Scheduler()
@@ -18,6 +19,15 @@ def read_config():
     config = json.load(f)
     f.close()
     return config
+
+def read_url_patterns():
+    f = open('./url_pattern.txt')
+    patterns = f.read().split('\n')
+    f.close()
+    result = []
+    for pattern in patterns:
+        result.append(re.compile(pattern.replace('.', '\\.')))
+    return result
 
 def save_page(url, parsed_html, html, links):
     global db
@@ -73,11 +83,20 @@ def worker():
                 save_page(url, parsed_html, html, links)
                 t_print(t_name, f'Saved {url}')
                 t_print(t_name, f'Filtering links')
-                filtered_links = [link for link in links if analyzer.is_html_page(link) and len(urlparse(link).path.split('/')) <= 20]
                 # for link in [link for link in links if analyzer.is_html_page(link) and rp.is_allowed(link) and len(urlparse(link).path.split('/')) <= 20]:
-                for link in filtered_links:
-                    sch.enqueue(link)
-                t_print(t_name, f'Added {len(filtered_links)} links to queue')
+                count_link = 0
+                for link in links:
+                    p = urlparse(link)
+                    if analyzer.is_html_page(link) and len(p.path.split('/')) <= 20:
+                        matched = False
+                        for pattern in url_patterns:
+                            if pattern.search(link):
+                                matched = True
+                                break
+                        if matched:
+                            sch.enqueue(link)
+                            count_link += 1
+                t_print(t_name, f'Added {len(count_link)} links to queue')
             else:
                 t_print(t_name, f'Cannot download {url}')
             sch.debuffer(url)
