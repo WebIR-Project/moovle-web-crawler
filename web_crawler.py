@@ -104,7 +104,8 @@ def worker():
             lock.release()
         except Exception:
             t_print(t_name, 'Error')
-            lock.release()
+            if lock.locked():
+                lock.release()
             sch.debuffer(url)
             sch.enqueue(url)            
 
