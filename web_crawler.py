@@ -109,7 +109,8 @@ def worker():
             if lock.locked():
                 lock.release()
             sch.debuffer(url)
-            sch.enqueue(url)            
+            sch.enqueue(url)
+            db.error_list.insert({'url': url})         
 
     t_print(t_name, 'Done')
 
