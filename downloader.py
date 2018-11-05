@@ -78,6 +78,8 @@ class Downloader:
             raise NetworkError('connection timeout.')
         except requests.exceptions.ReadTimeout:
             raise NetworkError('read timed out.')
+        except requests.exceptions.ConnectionError:
+            raise NetworkError('connection error')
 
 class Error(Exception):
     """Base class for exceptions in this module."""

@@ -43,7 +43,7 @@ class Scheduler:
             if url is None:
                 for host in host_counts:
                     url_result = list(self.db.queue.aggregate([{'$match': {'host': host['host']}}, {'$sort': {'timestamp': 1}}, {'$limit': 1}]))
-                    if len(url_result) >= 0:
+                    if len(url_result) > 0:
                         url = url_result[0]
                         break
         if url is not None:

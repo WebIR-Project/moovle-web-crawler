@@ -8,9 +8,7 @@ def parse_html(html):
     return soup
 
 def extract_links(soup):
-    links = []
-    for link in soup.findAll('a'):
-        links.append(link.get('href'))
+    links = [link.get('href') for link in soup.findAll('a') if link.get('href') is not None]
     return links
     
 def normalize_url(root_url, link) :

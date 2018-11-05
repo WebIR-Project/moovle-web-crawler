@@ -6,7 +6,6 @@ from robots_parser import RobotParser
 from urllib.parse import urlparse
 from scheduler import Scheduler
 
-url_patterns = read_url_patterns()
 client = MongoClient()
 db = client.moovle
 sch = Scheduler()
@@ -59,26 +58,28 @@ def worker():
             continue
         url = sch.dequeue()
         lock.release()
-        try:
-            t_print(t_name, f'Downloading {url}')
+        t_print(t_name, f'Downloading {url}')
 
-            html = None
-            while True:
-                try:
-                    html = d.get_page(url)
-                    break
-                except downloader.PageNotFound:
-                    break
-                except downloader.NetworkError:
-                    t_print(t_name, f'Retrying download {url}')
-                    pass
+        html = None
+        while True:
+            try:
+                html = d.get_page(url)
+                break
+            except downloader.PageNotFound:
+                break
+            except downloader.NetworkError:
+                t_print(t_name, f'Retrying download {url}')
+                pass
+        try:
             if html is not None:
                 t_print(t_name, f'Downloaded {url}')
                 parsed_html = analyzer.parse_html(html)
                 parsed_url = urlparse(url)
                 root_url = f'{parsed_url.scheme}://{parsed_url.netloc}'
-                links = [analyzer.normalize_url(root_url, link) for link in analyzer.extract_links(parsed_html) if not re.match('javascript:void\\(0\\)', link, re.IGNORECASE)]
-                lock.acquire()
+                links = []
+                for link in analyzer.extract_links(parsed_html):
+                    if link.lower().find('javascript:void(0)') == -1:
+                        links.append(analyzer.normalize_url(root_url, link))
                 t_print(t_name, f'Saving {url}')
                 save_page(url, parsed_html, html, links)
                 t_print(t_name, f'Saved {url}')
@@ -96,13 +97,14 @@ def worker():
                         if matched:
                             sch.enqueue(link)
                             count_link += 1
-                t_print(t_name, f'Added {len(count_link)} links to queue')
+                t_print(t_name, f'Added {count_link} links to queue')
             else:
                 t_print(t_name, f'Cannot download {url}')
             sch.debuffer(url)
             sch.visited(url)
-            lock.release()
-        except Exception:
+        except Exception as e:
+            print(e)
+            sys.exit(1)
             t_print(t_name, 'Error')
             if lock.locked():
                 lock.release()
@@ -112,6 +114,7 @@ def worker():
     t_print(t_name, 'Done')
 
 config = read_config()
+url_patterns = read_url_patterns()
 threads = []
 print('Starting...')
 for i in range(config['n_thread']):
