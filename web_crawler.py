@@ -66,8 +66,8 @@ def worker():
                 t_print(t_name, f'Downloaded {url}')
                 parsed_html = analyzer.parse_html(html)
                 parsed_url = urlparse(url)
-                hostname = parsed_url.netloc
-                links = [analyzer.normalize_url(hostname, link) for link in analyzer.extract_links(parsed_html)]
+                root_url = f'{parsed_url.scheme}://{parsed_url.netloc}'
+                links = [analyzer.normalize_url(root_url, link) for link in analyzer.extract_links(parsed_html)]
                 lock.acquire()
                 t_print(t_name, f'Saving {url}')
                 save_page(url, parsed_html, html, links)
