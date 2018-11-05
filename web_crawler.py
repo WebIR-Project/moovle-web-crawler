@@ -77,7 +77,7 @@ def worker():
                 parsed_html = analyzer.parse_html(html)
                 parsed_url = urlparse(url)
                 root_url = f'{parsed_url.scheme}://{parsed_url.netloc}'
-                links = [analyzer.normalize_url(root_url, link) for link in analyzer.extract_links(parsed_html)]
+                links = [analyzer.normalize_url(root_url, link) for link in analyzer.extract_links(parsed_html) if not re.match('javascript:void\\(0\\)', link, re.IGNORECASE)]
                 lock.acquire()
                 t_print(t_name, f'Saving {url}')
                 save_page(url, parsed_html, html, links)
