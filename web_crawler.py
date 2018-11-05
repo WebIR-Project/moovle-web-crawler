@@ -25,7 +25,7 @@ def save_page(url, parsed_html, html, links):
     if parsed_html.title is not None:
         title = parsed_html.title.string
     text = parsed_html.get_text()
-    db.moovle.insert({
+    db.pages.insert({
         'url': url,
         'title': title,
         'text': text,
