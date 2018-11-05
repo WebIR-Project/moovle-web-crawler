@@ -68,7 +68,7 @@ class Downloader:
                 r = requests.get(url, headers=self.random_useragent(), proxies=self.random_proxy(), timeout=3)
             else:
                 r = requests.get(url, timeout=3)
-            if r.status_code == 404:
+            if r.status_code == 404 or r.status_code == 403:
                 raise PageNotFound(f'{url} does not exist.')
             html = r.text
             return html
