@@ -73,9 +73,11 @@ def worker():
                 save_page(url, parsed_html, html, links)
                 t_print(t_name, f'Saved {url}')
                 t_print(t_name, f'Filtering links')
+                filtered_links = [link for link in links if analyzer.is_html_page(link) and len(urlparse(link).path.split('/')) <= 20]
                 # for link in [link for link in links if analyzer.is_html_page(link) and rp.is_allowed(link) and len(urlparse(link).path.split('/')) <= 20]:
-                for link in [link for link in links if analyzer.is_html_page(link) and len(urlparse(link).path.split('/')) <= 20]:
+                for link in filtered_links:
                     sch.enqueue(link)
+                t_print(t_name, f'Added {len(filtered_links)} links to queue')
             else:
                 t_print(t_name, f'Cannot download {url}')
             sch.debuffer(url)
