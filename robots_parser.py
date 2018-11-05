@@ -53,7 +53,7 @@ class RobotParser :
 						line_c += 1
 					line_c -= 1
 			elif re.match('Sitemap:', line):
-				result['disalloweds'].append(line.replace('Sitemap:', '').strip())
+				result['sitemaps'].append(line.replace('Sitemap:', '').strip())
 			line_c += 1
 		return result
 

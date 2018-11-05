@@ -1,4 +1,4 @@
-import analyzer, json, time
+import analyzer, json, time, sys
 from pymongo import MongoClient
 import threading
 import downloader
@@ -21,7 +21,9 @@ def read_config():
 
 def save_page(url, parsed_html, html, links):
     global db
-    title = parsed_html.title.string
+    title = None
+    if parsed_html.title is not None:
+        title = parsed_html.title.string
     text = parsed_html.get_text()
     db.moovle.insert({
         'url': url,
@@ -70,7 +72,9 @@ def worker():
                 t_print(t_name, f'Saving {url}')
                 save_page(url, parsed_html, html, links)
                 t_print(t_name, f'Saved {url}')
-                for link in [link for link in links if analyzer.is_html_page(link) and rp.is_allowed(link) and len(urlparse(link).path.split('/')) <= 20]:
+                t_print(t_name, f'Filtering links')
+                # for link in [link for link in links if analyzer.is_html_page(link) and rp.is_allowed(link) and len(urlparse(link).path.split('/')) <= 20]:
+                for link in [link for link in links if analyzer.is_html_page(link) and len(urlparse(link).path.split('/')) <= 20]:
                     sch.enqueue(link)
             else:
                 t_print(t_name, f'Cannot download {url}')
@@ -78,6 +82,7 @@ def worker():
             sch.visited(url)
             lock.release()
         except Exception:
+            t_print(t_name, 'Error')
             lock.release()
             sch.debuffer(url)
             sch.enqueue(url)            
@@ -88,7 +93,7 @@ config = read_config()
 threads = []
 print('Starting...')
 for i in range(config['n_thread']):
-    t = threading.Thread(name=i, target=worker)
+    t = threading.Thread(name=i+1, target=worker)
     t.daemon = True
     threads.append(t)
     t.start()
