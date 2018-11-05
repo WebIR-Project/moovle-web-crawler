@@ -9,7 +9,7 @@ def parse_html(html):
 
 def extract_links(soup):
     links = []
-    for link in soup.findAll('a', attrs={'href': re.compile("^http://")}):
+    for link in soup.findAll('a'):
         links.append(link.get('href'))
     return links
     
