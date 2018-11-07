@@ -1,3 +1,4 @@
+import sys
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
 c = MongoClient()
@@ -14,6 +15,6 @@ while db.pages.find({'fixed': {'$exists': False}}).count() > 0:
     lines = [line.strip() for line in text.splitlines() if line.strip() != '']
     lines = [phrase.strip() for line in lines for phrase in line.split("  ")]
     text = '\n'.join(lines)
-    db.pages.update({'url': doc['url']}, {'$set': {'text': text, 'fixed': True}})
+    db.pages.update({'url': doc['url']}, {'$set': {'text': text, 'fixed': True}}, multi=True)
     count += 1
     print(count)
