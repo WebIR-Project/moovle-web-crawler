@@ -33,7 +33,12 @@ def save_page(url, parsed_html, html, links):
     title = None
     if parsed_html.title is not None:
         title = parsed_html.title.string
+    for script in parsed_html(["script", "style"]):
+        script.decompose()
     text = parsed_html.get_text()
+    lines = [line.strip() for line in text.splitlines() if line.strip() != '']
+    lines = [phrase.strip() for line in lines for phrase in line.split("  ")]
+    text = '\n'.join(lines)
     db.pages.insert({
         'url': url,
         'title': title,
