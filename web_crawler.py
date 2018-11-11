@@ -5,6 +5,7 @@ import downloader
 from robots_parser import RobotParser
 from urllib.parse import urlparse
 from scheduler import Scheduler
+from image_extractor import extract_images
 
 client = MongoClient()
 db = client.moovle
@@ -28,7 +29,7 @@ def read_url_patterns():
         result.append(re.compile(pattern.replace('.', '\\.')))
     return result
 
-def save_page(url, parsed_html, html, links):
+def save_page(url, parsed_html, html, links, images):
     global db
     title = None
     if parsed_html.title is not None:
@@ -44,6 +45,7 @@ def save_page(url, parsed_html, html, links):
         'title': title,
         'text': text,
         'links': links,
+        'images': images,
         'html': html
     })
 
@@ -85,8 +87,9 @@ def worker():
                 for link in analyzer.extract_links(parsed_html):
                     if link.lower().find('javascript:void(0)') == -1:
                         links.append(analyzer.normalize_url(root_url, link))
+                images = extract_images(url, parsed_html)
                 t_print(t_name, f'Saving {url}')
-                save_page(url, parsed_html, html, links)
+                save_page(url, parsed_html, html, links, images)
                 t_print(t_name, f'Saved {url}')
                 t_print(t_name, f'Filtering links')
                 # for link in [link for link in links if analyzer.is_html_page(link) and rp.is_allowed(link) and len(urlparse(link).path.split('/')) <= 20]:
