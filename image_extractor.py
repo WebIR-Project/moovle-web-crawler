@@ -19,10 +19,10 @@ if __name__ == '__main__':
         doc = docs[0]
         soup = bs(doc['html'], 'html.parser')
         image_urls = extract_images(doc['url'], soup)
-        db.pages.update({'url': doc['url']}, {'$set': {'images': image_urls, 'extracted': True}})
+        db.pages.update_many({'url': doc['url']}, {'$set': {'images': image_urls, 'extracted': True}})
         count += 1
         if count % 100 == 0:
             print('.', end='', flush=True)
     print()
     print('cleaning...')
-    db.pages.update({}, {'$unset': {'extracted': True}}, multi=True)
+    db.pages.update_many({}, {'$unset': {'extracted': True}}, multi=True)
