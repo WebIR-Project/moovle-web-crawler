@@ -15,7 +15,7 @@ class Scheduler:
         f.close()
 
     def enqueue(self, url):
-        visited = True if self.db['pages'].find({'url': url}).count() > 0 else False
+        visited = True if self.db['visited'].find({'url': url}).count() > 0 else False
         in_queue = True if self.db['queue'].find({'url': url}).count() > 0 else False
         in_buffer = True if self.db['buffer'].find({'url': url}).count() > 0 else False
         banned = True if self.db['ban'].find({'url': url}).count() > 0 else False
@@ -65,6 +65,7 @@ class Scheduler:
     def visited(self, url):
         parsed_url = urlparse(url)
         host = parsed_url.netloc
+        self.db['visited'].insert_one({'url': url})
         if self.db.host_count.find({'host': host}).count() > 0:
             self.db.host_count.update({'host': host}, {'$inc': {'count': 1}})
         else:
