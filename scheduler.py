@@ -15,7 +15,7 @@ class Scheduler:
         f.close()
 
     def enqueue(self, url):
-        visited = True if self.db['html'].find({'url': url}).count() > 0 else False
+        visited = True if self.db['pages'].find({'url': url}).count() > 0 else False
         in_queue = True if self.db['queue'].find({'url': url}).count() > 0 else False
         in_buffer = True if self.db['buffer'].find({'url': url}).count() > 0 else False
         banned = True if self.db['ban'].find({'url': url}).count() > 0 else False
