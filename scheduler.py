@@ -22,7 +22,7 @@ class Scheduler:
         if not visited and not in_queue and not in_buffer and not banned:
             parsed_url = urlparse(url)
             host = parsed_url.netloc
-            self.db.queue.insert({'url': url, 'host': host, 'timestamp': datetime.now()})
+            self.db.queue.insert_one({'url': url, 'host': host, 'timestamp': datetime.now()})
 
     def get_new_host_url(self):
         host_counts = list(self.db.host_count.find())
@@ -49,7 +49,7 @@ class Scheduler:
                         break
         if url is not None:
             self.db.queue.remove({'url': url['url']})
-            self.db.buffer.insert({'host': url['host'], 'url': url['url']})
+            self.db.buffer.insert_one({'host': url['host'], 'url': url['url']})
         return url['url']
 
     def debuffer(self, url):
@@ -59,7 +59,7 @@ class Scheduler:
         urls = list(self.db.buffer.find())
         if len(urls) > 0:
             for url in urls:
-                self.db.queue.insert({'host': url['host'], 'url': url['url'], 'timestamp': 0})
+                self.db.queue.insert_one({'host': url['host'], 'url': url['url'], 'timestamp': 0})
                 self.db.buffer.remove({'url': url['url']})
 
     def visited(self, url):
@@ -69,4 +69,4 @@ class Scheduler:
         if self.db.host_count.find({'host': host}).count() > 0:
             self.db.host_count.update({'host': host}, {'$inc': {'count': 1}})
         else:
-            self.db.host_count.insert({'host': host, 'count': 1})
+            self.db.host_count.insert_one({'host': host, 'count': 1})
