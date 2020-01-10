@@ -40,7 +40,7 @@ def save_page(url, parsed_html, html, links, images):
     lines = [line.strip() for line in text.splitlines() if line.strip() != '']
     lines = [phrase.strip() for line in lines for phrase in line.split("  ")]
     text = '\n'.join(lines)
-    db.pages.insert({
+    db.pages.insert_one({
         'url': url,
         'title': title,
         'text': text,
@@ -118,7 +118,7 @@ def worker():
                 lock.release()
             sch.debuffer(url)
             sch.enqueue(url)
-            db.error_list.insert({'url': url})         
+            db.error_list.insert_one({'url': url})         
 
     t_print(t_name, 'Done')
 
